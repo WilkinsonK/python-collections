@@ -1,3 +1,5 @@
-redis
+click
+daemons
 psycopg2
 python-dotenv
+redis
