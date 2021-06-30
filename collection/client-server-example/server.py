@@ -119,8 +119,7 @@ class AppDaemon(run.RunDaemon):
         
         with AppServer().open() as server:
             LOG.debug("Listening...")
-            while self._is_running:
-                self.receive_incoming(server)
+            self.receive_incoming(server)
 
     def receive_incoming(self, server: AppServer.__open_socket__, buffsize: int = None):
         conn, addr = server.socket.accept()
@@ -133,12 +132,21 @@ class AppDaemon(run.RunDaemon):
                 conn.sendall(data)
 
     def start(self):
-        self._is_running = True
         super().start()
 
     def stop(self):
-        self._is_running = False
         super().stop()
+
+    def render_status(self):
+        message = "\n".join([
+            f"Server Daemon Status: {self.pid is not None}",
+            f"      pid: {self.pid}",
+            f"  pidfile: {self.pidfile}",
+        ])
+        return message
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 def register_group(func=None, parent: click.Group = None, name: str = None, **attrs):
@@ -154,6 +162,7 @@ def register_group(func=None, parent: click.Group = None, name: str = None, **at
         return sub_inner
 
     if func:
+        functools.update_wrapper(inner, func)
         return inner(func)
     return inner
 
@@ -203,7 +212,7 @@ class Controller:
 
         @click.command()
         def status():
-            print(f"daemon status: {self.app._is_running}")
+            print(self.app.render_status())
 
         register_children(cli, commands + [start, stop, restart, status])
 
