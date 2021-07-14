@@ -19,7 +19,7 @@ class SocketAttributes:
 
 
 class SocketStatus(enum.IntEnum):
-    OPEN: int   = enum.auto()
+    OPEN:   int = enum.auto()
     CLOSED: int = enum.auto()
 
 
