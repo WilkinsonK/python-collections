@@ -17,6 +17,12 @@ class SocketAttributes:
     proto:            int = -1
     fileno:           int = None
 
+    def asiterable(self):
+        iterable = dict()
+        for key in self.__dataclass_fields__.keys():
+            iterable.update({key: getattr(self, key)})
+        return iterable
+
 
 class SocketStatus(enum.IntEnum):
     OPEN:   int = enum.auto()
@@ -38,18 +44,20 @@ class BaseSocket(metaclass=SocketType):
     def __init__(self, host, port, **attrs):
         self._host  = host
         self._port  = port
-        self._attrs = SocketAttributes(**attrs)
+        self._attrs = SocketAttributes(**attrs).asiterable()
 
     def __repr__(self):
         return (
-            f"<{getclass(self).__name__}:"
-            f" {self._socket_status.name}>"
+            f"<{getclass(self).__name__}: "
+            f"port={self._port!r}, "
+            f"host={self._host!r}, "
+            f"status={self._socket_status.name}>"
         )
 
     def __del__(self):
         if self._socket_status == SocketStatus.OPEN:
             warnings.warn(
-                f"Socket {getclass(self).__name__} was never closed",
+                f"SocketType {getclass(self).__name__!r} was never closed",
                 SocketOpenWarning
             )
 
@@ -70,7 +78,7 @@ class BaseServerSocket(BaseSocket):
     def close(self):
         self.__close__()
 
-    def listen(self, backlog: int = 0) -> tuple[socket.socket, str]:
+    def listen(self, backlog: int = 0) -> "tuple[socket.socket, str]":
         self._socket.listen(backlog)
         return self._socket.accept()
 
