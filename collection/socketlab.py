@@ -49,7 +49,7 @@ class BaseSocket(metaclass=SocketType):
     def __del__(self):
         if self._socket_status == SocketStatus.OPEN:
             warnings.warn(
-                f"Socket {self} was never closed",
+                f"Socket {getclass(self).__name__} was never closed",
                 SocketOpenWarning
             )
 
