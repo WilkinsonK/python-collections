@@ -30,11 +30,11 @@ class SocketStatus(enum.IntEnum):
 
 
 class SocketOpenWarning(Warning):
-    """Warn if a socker is never closed"""
+    """Warn if a socker is never closed."""
 
 
 class SocketType(type):
-    """Socket Interface for defining server/client sockets"""
+    """Socket Interface for defining server/client sockets."""
 
 
 class BaseSocket(metaclass=SocketType):
@@ -42,6 +42,7 @@ class BaseSocket(metaclass=SocketType):
     _socket_status = SocketStatus.CLOSED
 
     def __init__(self, host, port, **attrs):
+        """Init a SocketType object."""
         self._host  = host
         self._port  = port
         self._attrs = SocketAttributes(**attrs).asiterable()
@@ -130,3 +131,17 @@ class BaseClientSocket(BaseSocket):
 
     def __exit__(self, etype, eval, tback):
         self.detach()
+
+
+class ServerSocket(BaseServerSocket):
+    """
+    SocketType object intended for opening
+    listening ports.
+    """
+
+
+class ClientSocket(BaseClientSocket):
+    """
+    SocketType object intended for sending
+    data to listening ports.
+    """
