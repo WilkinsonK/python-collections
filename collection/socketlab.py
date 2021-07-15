@@ -1,4 +1,5 @@
 import enum
+import functools
 import socket
 import warnings
 
@@ -8,6 +9,15 @@ from socket import AddressFamily, SocketKind
 
 def getclass(inst: object):
     return inst.__class__
+
+
+def not_implemented(func):
+
+    @functools.wraps(func)
+    def inner(*args, **kwargs):
+        raise NotImplementedError(f"{func.__qualname__} was not overriden")
+
+    return inner
 
 
 @dataclass
@@ -109,11 +119,9 @@ class BaseClientSocket(BaseSocket):
     def detach(self):
         self.__detach__()
 
+    @not_implemented
     def send(self, data, *args, **kwargs):
-        raise NotImplementedError(
-            f"{getclass(self).__name__}.send"
-            " was not overriden"
-        )
+        return NotImplemented
 
     def __connect__(self):
         self._socket = self._socket(**self._attrs)
