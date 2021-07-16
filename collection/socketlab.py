@@ -51,7 +51,7 @@ class BaseSocket(metaclass=SocketType):
     _socket        = socket.socket
     _socket_status = SocketStatus.CLOSED
 
-    def __init__(self, host, port, **attrs):
+    def __init__(self, host: str, port: int, **attrs):
         """Init a SocketType object."""
         self._host  = host
         self._port  = port

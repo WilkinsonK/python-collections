@@ -3,3 +3,4 @@ daemons
 psycopg2
 python-dotenv
 redis
+uvloop

@@ -40,7 +40,7 @@ def make_venv_keys(keys, prefix, suffix):
     pattern  = r"{0}[\w]*{1}" if len(prefix) > 0 else r"{1}"
     pattern += r"[\w+]{2}" if len(suffix) > 0 else r""
 
-    makekey = lambda k: pattern.formatat(prefix, k, suffix)
+    makekey = lambda k: pattern.format(prefix, k, suffix)
     return [re.compile(makekey(v)) for v in keys]
 
 
@@ -48,6 +48,6 @@ def make_dict_key(key, prefix, suffix, format="upper"):
     prefix = prefix if len(prefix) > 0 else "NO_PREFIX"
     suffix = suffix if len(suffix) > 0 else "NO_SUFFIX"
 
-    key = re.split(r"{0}_*".formatat(prefix), key)[-1]
-    key = re.split(r"_*{0}".formatat(suffix), key)[0] if suffix != "NO_SUFFIX" else key
+    key = re.split(r"{0}_*".format(prefix), key)[-1]
+    key = re.split(r"_*{0}".format(suffix), key)[0] if suffix != "NO_SUFFIX" else key
     return str.__getattribute__(key, format)()
