@@ -20,18 +20,28 @@ def not_implemented(func):
     return inner
 
 
-@dataclass
-class SocketAttributes:
-    family: AddressFamily = socket.AF_INET
-    type:      SocketKind = socket.SOCK_STREAM
-    proto:            int = -1
-    fileno:           int = None
+class SocketDataClass:
+    __dataclass_fields__ = dict()
 
     def asiterable(self):
         iterable = dict()
         for key in self.__dataclass_fields__.keys():
             iterable.update({key: getattr(self, key)})
         return iterable
+
+
+@dataclass
+class SocketAttributes(SocketDataClass):
+    family: AddressFamily = socket.AF_INET
+    type:      SocketKind = socket.SOCK_STREAM
+    proto:            int = -1
+    fileno:           int = None
+
+
+@dataclass
+class SocketConnection(SocketDataClass):
+    connection: socket.socket
+    retaddress: str
 
 
 class SocketStatus(enum.IntEnum):
@@ -89,9 +99,9 @@ class BaseServerSocket(BaseSocket):
     def close(self):
         self.__close__()
 
-    def listen(self, backlog: int = 0) -> "tuple[socket.socket, str]":
+    def listen(self, backlog: int = 0):
         self._socket.listen(backlog)
-        return self._socket.accept()
+        return SocketConnection(*self._socket.accept())
 
     def __open__(self):
         self._socket = self._socket(**self._attrs)
