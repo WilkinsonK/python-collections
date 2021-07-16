@@ -163,3 +163,13 @@ class ClientSocket(BaseClientSocket):
     SocketType object intended for sending
     data to listening ports.
     """
+
+
+class ServerType(type):
+    """Server Interface for defining server objects."""
+
+
+class BaseServer(metaclass=ServerType):
+    socket_class = ServerSocket
+    server_port  = 47716
+    server_host  = "localhost"
