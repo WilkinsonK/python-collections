@@ -1,7 +1,7 @@
 """
 ApiClient Library as standardization of API client objects.
 """
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from os import PathLike
@@ -116,6 +116,25 @@ class BaseApiClient(ABC, object):
     def session(self) -> requests.Session:
         return self._session
 
+    @abstractmethod
+    def handle_http_error(self, error: requests.HTTPError, resp: requests.Response = None) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def healthcheck(self) -> int:
+        raise NotImplementedError
+
+    @abstractmethod
+    def refresh(self, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def send(self, method: str, endpoint: str = None, data: dict = None, **kwargs) -> requests.Response:
+        raise NotImplementedError
+
+
+class ApiClient(BaseApiClient):
+
     def handle_http_error(self, error: requests.HTTPError, resp: requests.Response = None) -> None:
         """Handle http protocol errors."""
         args = (error,)
@@ -126,7 +145,7 @@ class BaseApiClient(ABC, object):
     def healthcheck(self) -> int:
         """Send a health check ping to api reference."""
         resp = self.send("get")
-        return resp
+        return resp.status_code
 
     def refresh(self, **kwargs) -> None:
         """Reset the client session."""
