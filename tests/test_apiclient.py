@@ -23,27 +23,6 @@ class TestExampleClient_ShouldFail(BaseApiClient):
     pass
 
 
-class ApiClientTests(TestCase):
-
-    def test_validation(self):
-        try:
-            failed = False
-            TestExampleClient_ShouldFail()
-        except RequiredAttributeError:
-            failed = True
-
-        self.assertEqual(failed, True)
-
-    def test_instantiation(self):
-        try:
-            failed, reason = False, None
-            TestExampleClient_ShouldPass()
-        except Exception as error:
-            failed, reason = True, error
-
-        self.assertEqual(failed, False, reason)
-
-
 class ApiAttrDefaultTests(TestCase):
 
     def test_apply_attribute(self):
@@ -56,3 +35,50 @@ class ApiAttrDefaultTests(TestCase):
         attr.apply(ss, None)
 
         self.assertEqual(ss.params["test"], expected)
+
+
+class ApiClientTests(TestCase):
+
+    def test_validation(self):
+        try:
+            failed = False
+            TestExampleClient_ShouldFail()
+        except RequiredAttributeError:
+            failed = True
+
+        self.assertEqual(failed, True)
+
+    def test_make_new(self):
+        try:
+            failed, reason = False, None
+            inst = TestExampleClient_ShouldPass._make_new()
+
+            if not inst.__class__ is TestExampleClient_ShouldPass:
+                raise TypeError(
+                    f"_make_new did not return instance "
+                    f"of {TestExampleClient_ShouldPass} "
+                )
+        except Exception as error:
+            failed, reason = True, error
+
+        self.assertEqual(failed, False, reason)
+
+    def test_init_session(self):
+        inst = TestExampleClient_ShouldPass()
+        expected = [0, 1, 2]
+        try:
+            inst._init_session(headers={"Include-Content": expected})
+        except Exception as error:
+            failed, reason = True, error
+            self.assertEqual(failed, False, reason)
+
+        self.assertEqual(inst.session.headers["Include-Content"], expected)
+
+    def test_instantiation(self):
+        try:
+            failed, reason = False, None
+            TestExampleClient_ShouldPass()
+        except Exception as error:
+            failed, reason = True, error
+
+        self.assertEqual(failed, False, reason)
