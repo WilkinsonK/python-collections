@@ -1,53 +1,71 @@
 import math
-
-from collections import UserList
-from typing import Union, List, Tuple
+from typing import Iterable
 
 
-class PartitionList(UserList):
-
-    def partition_list(self, array, bias):
-        init_size = self._get_init_size(array)
-        partition_array = list()
-        partitions, capacity = factors_from_bias(init_size, bias)
-
-        step = 0
-        while len(partition_array) < partitions:
-            partition_array.append(tuple(array[step:step+capacity]))
-            step += capacity
-
-        self.container = partition_array
-        self.partitions = partitions
-        self.capacity = capacity
-        self.total_count = len(array)
-
-        return self
-
-    def _get_init_size(self, array):
-        size = len(array)
-        while is_prime(size):
-            size += 1
-        return size
-
-    def __init__(self, array: Union[list, tuple], bias: int = 0.5):
-        self.partition_list(array, bias)
-
-    def __repr__(self):
-        name = self.__class__.__name__
-        parts = f"partitions: {self.partitions}"
-        size = f"max-capacity: {self.capacity}"
-        total = f"total-elements: {self.total_count}"
-        return f"{name}([{parts}, {size}, {total}], {self.container})"
-
-    def __iter__(self):
-        return iter(self.container)
+def _get_size_buffer(iterable: Iterable):
+    size = len(iterable)
+    while is_prime(size):
+        size += 1
+    return size
 
 
-def factors_from_bias(num: int, bias: float = 0.5):
-    factors = factor_smallest(num)
-    bias = math.floor(len(factors) * bias)
+def _get_dimensions(size: int, bias: float):
+    factors = factor_smallest(size)
+    bias    = math.floor(len(factors) * bias)
+    return [math.prod(i) for i in (factors[:bias], factors[bias:])]
 
-    return math.prod(factors[:bias]), math.prod(factors[bias:])
+
+def _partition_items(items: list, capacity: int):
+    new = []
+    while len(items) > 0:
+        i, items = items[:capacity], items[capacity:]
+        new.append(i)
+    return new
+
+
+class PartitionedTuple(tuple):
+    _partition_count:    int
+    _partition_capacity: int
+
+    def __new__(cls, items: Iterable, bias: float = 0.5, *args, **kwargs):
+        items = cls._partition_items(list(items), bias)
+        inst  = cls._make_new(items, *args, **kwargs)
+        return inst
+
+    def __init__(self, *items):
+        self._partition_count    = len(self)
+        self._partition_capacity = len(self[0])
+
+    @classmethod
+    def _make_new(cls, items: list, init=True, *args, **kwargs):
+        if cls is tuple:
+            cls = PartitionedTuple
+
+        inst = tuple.__new__(cls, items)
+        if init:
+            inst._init(*items, *args, **kwargs)
+        return inst
+
+    @classmethod
+    def _get_dimensions(cls, items: list, bias: float):
+        size = _get_size_buffer(items)
+        return _get_dimensions(size, bias)
+
+    @classmethod
+    def _partition_items(cls, items: list, bias: float):
+        _, cap = cls._get_dimensions(items, bias)
+        return _partition_items(items, cap)
+
+    def _init(self, *args, **kwargs):
+        self.__init__(*args, **kwargs)
+
+    @property
+    def count(self):
+        return self._partition_count
+
+    @property
+    def capacity(self):
+        return self._partition_capacity
 
 
 def factor_smallest(num: int):
@@ -64,13 +82,13 @@ def factor_smallest(num: int):
 
 
 def primes(limit: int):
-    step = 0
-    while step < limit:
-        while not is_prime(step):
-            step += 1
-        if step >= limit: break
-        yield step
-        step += 1
+    next_val = 0
+    while next_val < limit:
+        while not is_prime(next_val):
+            next_val += 1
+        if next_val >= limit: break
+        yield next_val
+        next_val += 1
 
 
 def is_prime(num: int):
@@ -85,3 +103,7 @@ def is_prime(num: int):
         step += 6
 
     return True
+
+
+part_t = PartitionedTuple([0 for _ in range(49)])
+print(part_t.capacity, part_t.count, part_t, end="\n")

@@ -66,11 +66,7 @@ class ApiClientTests(TestCase):
     def test_init_session(self):
         inst = TestExampleClient_ShouldPass()
         expected = [0, 1, 2]
-        try:
-            inst._init_session(headers={"Include-Content": expected})
-        except Exception as error:
-            failed, reason = True, error
-            self.assertEqual(failed, False, reason)
+        inst._init_session(headers={"Include-Content": expected})
 
         self.assertEqual(inst.session.headers["Include-Content"], expected)
 
