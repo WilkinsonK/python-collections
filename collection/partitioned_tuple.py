@@ -1,6 +1,4 @@
 import math
-
-from functools import singledispatch
 from typing import Iterable
 
 
@@ -15,15 +13,16 @@ class PartitionedTuple(tuple):
         return inst
 
     def __init__(self, items: Iterable, bias: float = 0.5):
+        self._sample_value       = self[0] if len(self) > 0 else []
         self._partition_count    = len(self)
-        self._partition_capacity = len(self[0])
+        self._partition_capacity = len(self._sample_value)
 
     def __repr__(self):
         count, capacity  = self.count, self.capacity
         return "".join([
             f"{self.__class__.__name__}(",
             f"{count=}, {capacity=}, ",
-            f"[{_render_repr(self)}]", f")"
+            f"[{self._render_repr()}]", f")"
         ])
 
     @classmethod
@@ -42,8 +41,21 @@ class PartitionedTuple(tuple):
 
     @classmethod
     def _partition_items(cls, items: list, bias: float):
-        _, cap = cls._get_dimensions(items, bias)
-        return _partition_items(items, cap)
+        count, cap = cls._get_dimensions(items, bias)
+        return _partition_items(items, count, cap)
+
+    def _render_repr(self):
+        sample, end = list(self._sample_value), None
+        if self.capacity >= 5:
+            sample, end = sample[:5], "..."
+        return self._render_repr_sample(sample, end)
+
+    @staticmethod
+    def _render_repr_sample(sample: list, end: str = None):
+        sample = [f"{i!r}" for i in sample]
+        if end:
+            sample += [end]
+        return ", ".join(sample)
 
     @property
     def count(self):
@@ -54,13 +66,21 @@ class PartitionedTuple(tuple):
         return self._partition_capacity
 
 
-def _prime_factors(start: int):
-    while not (_is_prime(start) or (start <= 1)):
-        for prime in _primes(start):
-            if start % prime == 0:
-                yield prime
-                start = start // prime
-    yield start
+def _prime_factors(num: int):
+    while not (_is_prime(num) or (num <= 1)):
+        num, prime = _next_prime_factor(num)
+        yield prime
+    yield num
+
+
+def _next_prime_factor(num: int):
+    for _prime in _primes(num):
+        if num % _prime == 0:
+            prime = _prime
+            break
+
+    num = num // prime
+    return num, prime
 
 
 def _get_size_buffer(iterable: Iterable):
@@ -76,9 +96,9 @@ def _get_dimensions(size: int, bias: float):
     return [math.prod(i) for i in (factors[:bias], factors[bias:])]
 
 
-def _partition_items(items: list, capacity: int):
+def _partition_items(items: list, count: int, capacity: int):
     new = []
-    while len(items) > 0:
+    while len(new) < count:
         i, items = items[:capacity], items[capacity:]
         new.append(i)
     return new
@@ -106,20 +126,6 @@ def _get_next_prime(num: int):
     return num
 
 
-def _render_repr(ptuple: PartitionedTuple):
-    sample, end = list(ptuple[0]), None
-    if ptuple.capacity >= 5:
-        sample, end = sample[:5], "..."
-    return _render_repr_sample(sample, end)
-
-
-def _render_repr_sample(sample: list, end: str = None):
-    sample = [f"{i!r}" for i in sample]
-    if end:
-        sample += [end]
-    return ", ".join(sample)
-
-
 def _is_prime(num: int):
     if (num <= 1): return False
     if (num <= 3): return True
@@ -132,3 +138,14 @@ def _is_prime(num: int):
         step += 6
 
     return True
+
+
+
+def _test():
+    for i in range(10000):
+        print([j for j in _prime_factors(i)])
+        test = PartitionedTuple([j for j in range(i)])
+
+
+if __name__ == "__main__":
+    _test()
