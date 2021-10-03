@@ -45,9 +45,6 @@ class PartitionedTuple(tuple):
         _, cap = cls._get_dimensions(items, bias)
         return _partition_items(items, cap)
 
-    def _init(self, *args, **kwargs):
-        self.__init__(*args, **kwargs)
-
     @property
     def count(self):
         return self._partition_count
