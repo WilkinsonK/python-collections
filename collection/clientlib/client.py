@@ -1,10 +1,10 @@
 from clientlib.base import BaseClient
 from clientlib.enums import Method
 from clientlib.errors import BadResponseError, HTTPError, RequestException
-from clientlib.types import NotSet, Response
+from clientlib.typedefs import NotSet, Response
 
 
-class ApiClient(BaseClient):
+class BaseApiClient(BaseClient):
     """
     Access object for interaction with an external API.
     """

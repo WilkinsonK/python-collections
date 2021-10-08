@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from clientlib.types import Session
+from clientlib.typedefs import Session
 
 
 class ApplyBehavior(Enum):

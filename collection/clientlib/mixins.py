@@ -3,7 +3,7 @@ from typing import Any, Mapping, Tuple, Union
 
 from clientlib.enums import ApplyBehavior, AttrDefault
 from clientlib.errors import RequiredAttributeError
-from clientlib.types import ConnectionTimeout, ReadTimeout, \
+from clientlib.typedefs import ConnectionTimeout, ReadTimeout, \
                             NotSet, Session
 
 

@@ -2,7 +2,7 @@
 ApiClient Library as standardization of API client objects.
 """
 
-from clientlib.client import ApiClient
+from clientlib.client import BaseApiClient
 from clientlib.enums import Method
 
 

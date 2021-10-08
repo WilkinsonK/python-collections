@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from clientlib.enums import Method
 from clientlib.errors import HTTPError
 from clientlib.mixins import ClientInitMixIn, ClientValidationMixIn
-from clientlib.types import Response, Session
+from clientlib.typedefs import Response, Session
 
 
 def not_implemented(method):
@@ -14,12 +14,16 @@ def not_implemented(method):
     returns 'NotImplemented' type.
     """
 
-    message = f"method {method!r} has not been implemented yet!"
-
     @functools.wraps(method)
     def inner(*args, **kwargs):
-        if method(*args, **kwargs) is NotImplemented:
-            raise NotImplementedError(message)
+        result = method(*args, **kwargs)
+        if result is NotImplemented:
+            raise_not_implemented()
+        return result
+
+    def raise_not_implemented():
+        message = f"method {method!r} has not been implemented yet!"
+        raise NotImplementedError(message)
 
     return inner
 
