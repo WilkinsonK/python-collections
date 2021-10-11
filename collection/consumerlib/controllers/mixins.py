@@ -5,7 +5,6 @@ from typing import Any, Mapping
 from consumerlib.controllers.maps import ListenState
 from consumerlib.helpers.maps import EventMap, ClientMap
 from consumerlib.helpers.queues import MessageQueue
-from tools.telemetry import ELKClient, get_consumer_logger
 
 
 class BaseControllerMixIn:
@@ -48,9 +47,9 @@ class ControllerInitMixIn(BaseControllerMixIn):
             inst._init(*args, **kwargs)
         return inst
 
-    def _init(self, settings: Mapping[str, Any], client: ELKClient, *args, **kwargs):
+    def _init(self, settings: Mapping[str, Any], logger: Logger, *args, **kwargs):
+        self._logger  = logger
         self._clients = self._init_clients(settings)
-        self._logger  = get_consumer_logger(settings, client)
         self._queue   = self._init_queue(settings)
         self.__init__(*args, **kwargs)
 
@@ -98,96 +97,49 @@ class ControllerABCMixIn(BaseControllerMixIn, ABC):
 
 class ControllerHostsMixIn(ControllerABCMixIn, BaseControllerMixIn):
 
-    def connect(self, channel_data: list = [], subscribe: bool = True):
+    def _connect(self, *args, **kwargs):
         self._logger.info("connecting to hosts...")
         try:
-            self._connect(channel_data, subscribe)
+            self.connect(*args, **kwargs)
         except Exception as failure:
             self._logger.error("failed connecting to hosts:", exc_info=True)
             raise failure
 
-    def _connect(self, channel_data, subscribe):
-        """
-        Not implemented here.
-        Connect to the controller target hosts.
-        """
-        pass
-
-    def close(self):
+    def _close(self):
+        self._logger.info("closing connections from hosts...")
         try:
-            self._close()
+            self.close()
         except Exception as failure:
             self._logger.error("failed disconnecting from hosts:", exc_info=True)
             raise failure
 
-    def _close(self):
-        """
-        Not implemented here.
-        Disconnect from the controller target hosts.
-        """
-        pass
-
-    def refresh(self):
+    def _refresh(self):
         try:
             # may need to implement an event queue
             # then wait for any remaining events to
             # close out before running refresh.
-            self._refresh()
+            self.refresh()
         except Exception as failure:
             self._logger.error("failed refreshing host connections.")
             raise failure
 
-    def _refresh(self):
-        """
-        Not implemented here.
-        Refresh connections to target hosts.
-        """
-        pass
-
 
 class ControllerListenMixIn(ControllerABCMixIn, BaseControllerMixIn):
 
-    def listen(self):
-        self.prerun()
+    def _listen(self):
         if self.listen_state is ListenState.CLOSED:
             # Should we raise an error here?
             return
 
         self.logger.info("listening for events...")
-        self._listen()
+        self.listen()
 
-        self.postrun()
-
-    def _listen(self):
-        """
-        Not implemented here.
-        Override this method to start
-        listening for events.
-        """
-        pass
-
-    def prerun(self, *args, **kwargs):
+    def _prerun(self, *args, **kwargs):
         self._logger.info("starting PDF Consumer...")
-        self._prerun()
+        self.prerun()
         self._logger.info("ready to listen for events.")
 
-    def _prerun(self):
-        """
-        Not implemented here.
-        Override this method to prepare
-        controller for listening.
-        """
-        pass
-
-    def postrun(self, *args, **kwargs):
+    def _postrun(self, *args, **kwargs):
         self._logger.info("stopping PDF Consumer...")
-        self._postrun()
+        self.postrun()
         self._logger.info("consumer no longer in ready state.")
-
-    def _postrun(self):
-        """
-        Not implemented here.
-        Override this method to safely
-        stop controller listening.
-        """
-        pass

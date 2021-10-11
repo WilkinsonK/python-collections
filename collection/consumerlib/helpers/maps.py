@@ -1,9 +1,7 @@
 from abc import ABC, ABCMeta, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dc_field
 from logging import Logger
-
 from typing import Any, Callable, Coroutine, List, Mapping, Tuple, Union
-
 
 from consumerlib.helpers.typedefs import ClientType
 
@@ -36,7 +34,7 @@ class BaseMapMeta(ABC, type):
 class NoDundersMapMeta(BaseMapMeta, ABCMeta):
 
     def keys(cls):
-        return [k for k in dir(cls) if "__" not in k[:2]]
+        return [k for k in dir(cls) if "_" not in k[:2]]
 
 
 class EventMapMeta(NoDundersMapMeta):
@@ -53,12 +51,29 @@ class FetchMapMeta(NoDundersMapMeta):
 
 @dataclass
 class Parameter:
-    name: str
-    type: type = object
-    validator: Callable = lambda p: None
+    name:              str
+    type_factory: Callable = dc_field(repr=False, default=lambda p: p)
+    validator:    Callable = dc_field(repr=False, default=lambda p: None)
+
+    _value: Any = dc_field(repr=False, init=False, default=None)
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = self.type_factory(value)
 
     def validate(self, value):
-        self.validator(value)
+        """Validates the value passed in to the function."""
+        tmp = self.type_factory(value)
+        self.validator(tmp)
+
+    def validate_and_set(self, value):
+        """Validates and sets the passed value."""
+        self.validate(value)
+        self.value = value
 
 
 class ParamMapMeta(NoDundersMapMeta):
@@ -95,7 +110,7 @@ class BaseClientMap(ABC):
                 continue
             self._client_member_classes[name] = value
 
-    def __getitem__(self, name):
+    def __getitem__(self, name) -> ClientType:
         if name not in self.keys():
             class_name = (self.__class__).__name__
             raise AttributeError(f"{class_name} has no attribute {name!r}")

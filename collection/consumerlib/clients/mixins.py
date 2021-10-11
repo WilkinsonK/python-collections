@@ -48,21 +48,24 @@ class ClientInitMixin(BaseClientMixIn):
         inst = object.__new__(cls)
         if init:
             inst._init(*args, **kwargs)
+        return inst
 
     def _init(self, settings, logger, *args, **kwargs):
         self._init_attributes(settings, logger)
-        self._init_connect_params()
         self.__init__(*args, **kwargs)
 
     def _init_attributes(self, settings, logger):
         self._logger   = logger
         self._settings = settings
+        self._connect_params = self._init_connect_params()
 
     def _init_connect_params(self):
+        _connect_params = {}
         for key, setting in self.connect_params.items():
             value = self._settings[setting.name]
-            setting.validate(value)
-            self._connect_params[key] = value
+            setting.validate_and_set(value)
+            _connect_params[key] = setting.value
+        return _connect_params
 
 
 class ClientABCMixIn(BaseClientMixIn, ABC):
@@ -80,46 +83,34 @@ class ClientABCMixIn(BaseClientMixIn, ABC):
 
 class ClientHostMixIn(ClientABCMixIn, BaseClientMixIn):
 
-    def connect(self) -> None:
+    def _connect(self) -> None:
+        self._connect_state = ConnectState.PENDING
         try:
-            self._connect()
-        except Exception as failure:
-            class_name = (self.__class__).__name__
-            self._logger.error(f"failed connecting to host {class_name}:", exc_info=True)
-            raise failure
+            conn = self.__class__.connectable
+            self._connection = conn(**self._connect_params)
+            self._connect_state = ConnectState.OPEN
+        except:
+            self._connect_state = ConnectState.CLOSED
+            raise
 
-    def _connect(self, **kwargs):
-        """
-        Not implemented here.
-        Connect to the target host.
-        """
-        pass
-
-    def close(self) -> None:
+    def _close(self) -> None:
         try:
-            self._close()
-        except Exception as failure:
-            class_name = (self.__class__).__name__
-            self._logger.error(f"failed disconnection from {class_name}:", exc_info=True)
-            raise failure
-
-    def _close(self):
-        """
-        Not implemented here.
-        Disconnect from target host.
-        """
-        pass
+            self._connection.close()
+        except:
+            raise
+        finally:
+            self._connect_state = ConnectState.CLOSED
 
 
-class ClientContextMixIn(ClientABCMixIn, BaseClientMixIn):
+class ClientContextMixIn(ClientHostMixIn, BaseClientMixIn):
 
     def __enter__(self):
         if self._connect_state is ConnectState.CLOSED:
-            self.connect()
+            self._connect()
         return self
 
     def __exit__(self, type, value, traceback):
-        self.close()
+        self._close()
 
 
 class ClientDatabaseMixIn(ClientHostMixIn, BaseClientMixIn):

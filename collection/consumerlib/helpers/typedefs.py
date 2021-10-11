@@ -3,4 +3,9 @@ from abc import ABCMeta
 
 class ClientType(ABCMeta, type):
     """Client representational access object."""
-    pass
+
+    def connect(self) -> None:
+        pass
+
+    def close(self) -> None:
+        pass

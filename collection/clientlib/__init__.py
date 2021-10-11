@@ -6,4 +6,4 @@ from clientlib.client import BaseApiClient
 from clientlib.enums import Method
 
 
-__all__ = ("ApiClient", "Method")
+__all__ = ("BaseApiClient", "Method")
