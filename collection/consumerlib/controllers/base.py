@@ -2,11 +2,11 @@ import asyncio
 import re
 import time
 
-from consumer.controllers.maps import ListenState
-from consumer.controllers.mixins import                         \
-                    ControllerABCMixIn, ControllerInitMixIn,        \
-                    ControllerHostsMixIn, ControllerListenMixIn
-from consumer.helpers.aioevents import execute_async_task
+from consumerlib.controllers.maps import ListenState
+from consumerlib.controllers.mixins import                          \
+                    ControllerInitMixIn, ControllerHostsMixIn,      \
+                    ControllerListenMixIn
+from consumerlib.helpers.aioevents import execute_async_task
 
 
 class BaseController(ControllerInitMixIn, ControllerHostsMixIn, ControllerListenMixIn):

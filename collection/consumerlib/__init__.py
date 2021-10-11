@@ -1,8 +1,6 @@
-from consumer.controllers import BaseController, ListenState
-from consumer.clients import BaseClient, BaseDatabaseClient, ConnectState
-from consumer.helpers.maps import ClientMap, EventMap, FetchMap, ParamMap, Parameter
-
-import types
+from consumerlib.controllers import BaseController, ListenState
+from consumerlib.clients import BaseClient, BaseDatabaseClient, ConnectState
+from consumerlib.helpers.maps import ClientMap, EventMap, FetchMap, ParamMap, Parameter
 
 
 __all__ = (

@@ -2,12 +2,12 @@ import sqlite3
 
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import Any, Callable, Mapping, Tuple, Union
+from typing import Any, Mapping, Tuple, Union
 
 import psycopg2
 
-from consumer.clients.maps import ConnectState
-from consumer.helpers.maps import FetchMap, ParamMap, Parameter
+from consumerlib.clients.maps import ConnectState
+from consumerlib.helpers.maps import FetchMap, ParamMap
 
 
 class BaseClientMixIn:

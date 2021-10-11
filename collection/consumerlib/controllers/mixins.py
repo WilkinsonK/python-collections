@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from logging import Logger
 from typing import Any, Mapping
 
-from consumer.controllers.maps import ListenState
-from consumer.helpers.maps import EventMap, ClientMap
-from consumer.helpers.queues import MessageQueue
+from consumerlib.controllers.maps import ListenState
+from consumerlib.helpers.maps import EventMap, ClientMap
+from consumerlib.helpers.queues import MessageQueue
 from tools.telemetry import ELKClient, get_consumer_logger
 
 

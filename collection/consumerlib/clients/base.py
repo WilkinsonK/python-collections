@@ -1,7 +1,7 @@
-from consumer.clients.maps import ConnectState
-from consumer.clients.mixins import                             \
+from consumerlib.clients.maps import ConnectState
+from consumerlib.clients.mixins import                             \
                 ClientDatabaseMixIn, ClientInitMixin, ClientContextMixIn
-from consumer.helpers.typedefs import ClientType
+from consumerlib.helpers.typedefs import ClientType
 
 
 class BaseClient(ClientInitMixin, metaclass=ClientType):

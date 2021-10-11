@@ -5,7 +5,7 @@ from logging import Logger
 from typing import Any, Callable, Coroutine, List, Mapping, Tuple, Union
 
 
-from consumer.helpers.typedefs import ClientType
+from consumerlib.helpers.typedefs import ClientType
 
 
 class BaseMapMeta(ABC, type):
