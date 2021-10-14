@@ -87,17 +87,23 @@ class ParamMapMeta(NoDundersMapMeta):
 
 class BaseClientMap(ABC):
     _client_member_classes = {}
+    _settings              = {}
 
     def keys(self):
         return [k for k in self._client_member_classes.keys()]
 
-    def __init__(self, settings: Mapping[str, Any], logger: Logger = None):
-        self._set_client_member_classes()
-        self._set_client_members(settings, logger)
+    def new_client(self, name, logger=None) -> ClientType:
+        """
+        Create a new client instance if the class
+        in client mapping.
+        """
+        if self._has_member_class(name):
+            member_class = self._client_member_classes[name]
+            return member_class(self._settings, logger)
 
-    def _set_client_members(self, settings, logger):
-        for name, member_class in self._client_member_classes.items():
-            client = member_class(settings, logger)
+    def _set_client_members(self, logger):
+        for name in self.keys():
+            client = self.new_client(name, logger)
             setattr(self, name, client)
 
     def _set_client_member_classes(self):
@@ -110,14 +116,26 @@ class BaseClientMap(ABC):
                 continue
             self._client_member_classes[name] = value
 
-    def __getitem__(self, name) -> ClientType:
+    def _has_member_class(self, name):
         if name not in self.keys():
             class_name = (self.__class__).__name__
             raise AttributeError(f"{class_name} has no attribute {name!r}")
-        return getattr(self, name)
+        return True
+
+    def __init__(self, settings: Mapping[str, Any], logger: Logger = None):
+        self._settings = settings
+        self._set_client_member_classes()
+        self._set_client_members(logger)
+
+    def __getitem__(self, name) -> ClientType:
+        if self._has_member_class(name):
+            return getattr(self, name)
 
     def __contains__(self, name):
         return name in self.keys()
+
+    def __iter__(self):
+        return iter([self[c] for c in self.keys()])
 
 
 class BaseFetchMap(Callable[..., Any], metaclass=FetchMapMeta):

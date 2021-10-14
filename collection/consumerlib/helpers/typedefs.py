@@ -9,3 +9,7 @@ class ClientType(ABCMeta, type):
 
     def close(self) -> None:
         pass
+
+    @property
+    def status(self) -> str:
+        pass

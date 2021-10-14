@@ -1,5 +1,5 @@
-from consumerlib.controllers.base import BaseController
+from consumerlib.controllers.base import AsyncController, BaseController, Controller
 from consumerlib.controllers.maps import ListenState
 
 
-__all__ = ("BaseController", "ListenState")
+__all__ = ("AsyncController", "BaseController", "Controller", "ListenState")

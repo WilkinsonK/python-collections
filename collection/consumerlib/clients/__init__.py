@@ -1,5 +1,5 @@
-from consumerlib.clients.base import BaseClient, BaseDatabaseClient
+from consumerlib.clients.base import BaseClient, AsyncClient, DatabaseClient
 from consumerlib.clients.maps import ConnectState
 
 
-__all__ = ("BaseClient", "BaseDatabaseClient", "ConnectState")
+__all__ = ("BaseClient", "AsyncClient", "DatabaseClient", "ConnectState")

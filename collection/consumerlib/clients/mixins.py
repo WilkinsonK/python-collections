@@ -2,12 +2,12 @@ import sqlite3
 
 from abc import ABC, abstractmethod
 from logging import Logger
-from typing import Any, Mapping, Tuple, Union
+from typing import Any, Callable, Mapping, Tuple, Union
 
 import psycopg2
 
 from consumerlib.clients.maps import ConnectState
-from consumerlib.helpers.maps import FetchMap, ParamMap
+from consumerlib.helpers.maps import FetchMap, ParamMap, Parameter
 
 
 class BaseClientMixIn:
@@ -36,6 +36,14 @@ class BaseClientMixIn:
     @property
     def settings(self):
         return self._settings
+
+    @property
+    def status(self):
+        class_name = (self.__class__).__name__
+        return f"{class_name} Status Check:" + "\n\t".join(["",
+            f"connectable:   {self.connectable!s}",
+            f"connect state: {self.connect_state!s}"
+        ])
 
 
 class ClientInitMixin(BaseClientMixIn):
@@ -81,7 +89,7 @@ class ClientABCMixIn(BaseClientMixIn, ABC):
         return NotImplemented
 
 
-class ClientHostMixIn(ClientABCMixIn, BaseClientMixIn):
+class ClientHostsMixIn(ClientABCMixIn, BaseClientMixIn):
 
     def _connect(self) -> None:
         self._connect_state = ConnectState.PENDING
@@ -102,7 +110,7 @@ class ClientHostMixIn(ClientABCMixIn, BaseClientMixIn):
             self._connect_state = ConnectState.CLOSED
 
 
-class ClientContextMixIn(ClientHostMixIn, BaseClientMixIn):
+class ClientContextMixIn(ClientHostsMixIn, BaseClientMixIn):
 
     def __enter__(self):
         if self._connect_state is ConnectState.CLOSED:
@@ -113,7 +121,7 @@ class ClientContextMixIn(ClientHostMixIn, BaseClientMixIn):
         self._close()
 
 
-class ClientDatabaseMixIn(ClientHostMixIn, BaseClientMixIn):
+class ClientDatabaseMixIn(ClientHostsMixIn, BaseClientMixIn):
     connectable = psycopg2.connect
 
     def cursor(self, **kwargs):
@@ -148,3 +156,39 @@ class ClientDatabaseMixIn(ClientHostMixIn, BaseClientMixIn):
         if isinstance(method, str):
             return FetchMap[method.upper()]
         return method
+
+
+class BaseAsyncClientMixIn(ClientABCMixIn, BaseClientMixIn):
+    pass
+
+
+class AsyncClientHostsMixIn(BaseAsyncClientMixIn):
+
+    async def _connect(self) -> None:
+        self._connect_state = ConnectState.PENDING
+        try:
+            conn = self.__class__.connectable
+            self._connection    = conn(**self._connect_params)
+            self._connect_state = ConnectState.OPEN
+        except:
+            self._connect_state = ConnectState.CLOSED
+            raise
+
+    async def _close(self) -> None:
+        try:
+            await self._connection.close()
+        except:
+            raise
+        finally:
+            self._connect_state = ConnectState.CLOSED
+
+
+class AsyncClientContextMixIn(AsyncClientHostsMixIn, BaseClientMixIn):
+
+    async def __aenter__(self):
+        if self._connect_state is ConnectState.CLOSED:
+            await self._connect()
+        return self
+
+    async def __aexit__(self, type, value, traceback):
+        await self._close()

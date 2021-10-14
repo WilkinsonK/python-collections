@@ -1,26 +1,23 @@
-from asyncio.queues import PriorityQueue, QueueEmpty
+from asyncio.queues import LifoQueue, QueueEmpty
 
 
-class MessageQueue(PriorityQueue):
-    """
-    Subclass of PriorityQueue which is able to
-    parse/prepare incoming messages.
-    """
+class MessageQueue(LifoQueue):
 
-    async def apush(self, message, priority: int = 999):
-        item = self._prepare_message(message, priority)
-        await self.put(item)
+    async def apush(self, message):
+        await self.put(message)
 
     async def apull(self):
-        _, message = await self.get()
+        message = await self.get()
         return message
+
+    def push(self, message):
+        while not (self.maxsize > self.qsize() + 1):
+            time.sleep(1.0)
+        self.put_nowait(message)
 
     def pull(self):
         try:
-            _, message = self.get_nowait()
+            message = self.get_nowait()
         except QueueEmpty:
             return
         return message
-
-    def _prepare_message(self, message, priority):
-        return (priority, message)
