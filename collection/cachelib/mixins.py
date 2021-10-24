@@ -40,7 +40,7 @@ class CacheAgentInitMixIn(BaseCacheAgentMixIn):
         return cls._new(name, config, args, kwargs)
 
     @classmethod
-    def _new(cls, name, config, args, kwargs, init=True):
+    def _new(cls, name, config, args=(), kwargs={}, init=True):
         inst = object.__new__(cls)
         if init:
             inst._init(name, config, *args, **kwargs)
