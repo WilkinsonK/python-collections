@@ -21,9 +21,9 @@ class BaseSignature:
         self._set_callargs(*args, **kwargs)
         self._set_callname()
 
-    def __call__(self, *args, **kwargs):
-        self._set_callargs(*args, **kwargs)
-        self._set_callname()
+    def __call__(self):
+        args   = self.callargs.get("args", ())
+        kwargs = self.callargs.get("kwargs", {})
         return self.callable(*args, **kwargs)
 
     def _set_callargs(self, *args, **kwargs):
@@ -45,7 +45,7 @@ class Signature(BaseSignature):
 
     def _set_callargs(self, *args, **kwargs):
         callargs = self._get_callargs(*args, **kwargs)
-        self.callargs =  self._parse_callargs(callargs)
+        self.callargs = self._parse_callargs(callargs)
 
     def _get_callargs(self, *args, **kwargs):
         if [args, kwargs] == [(), {}]:

@@ -1,7 +1,7 @@
 import pickle
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Union
 
 import redis
 
@@ -44,6 +44,9 @@ class CacheAgentInitMixIn(BaseCacheAgentMixIn):
         inst = object.__new__(cls)
         if init:
             inst._init(name, config, *args, **kwargs)
+
+    def __init__(self):
+        self.connect()
 
     def _init(self, config, *args, **kwargs):
         self._agent_conf = config
@@ -98,20 +101,16 @@ class CacheAgentHostsMixIn(CacheAgentABCMixIn, BaseCacheAgentMixIn):
             raise
 
     def _connect(self):
-        """
-        Not implemented here.
-        Override this method to handle connecting
-        to a host.
-        """
-        pass
+        conf             = self._connect_params
+        self._connection = self.connectable(**conf)
 
     def close(self):
         self._close()
+        self._connect_state = ConnectState.CLOSED
 
     def _close(self):
         self._connection.close()
-        self._connection    = self.connectable
-        self._connect_state = ConnectState.CLOSED
+        self._connection = self.connectable
 
 
 class CacheAgentTransactionMixIn(CacheAgentABCMixIn, BaseCacheAgentMixIn):
@@ -119,6 +118,7 @@ class CacheAgentTransactionMixIn(CacheAgentABCMixIn, BaseCacheAgentMixIn):
     def push(self, func: Callable, *args, **kwargs):
         sig = Signature(func, *args, **kwargs)
         self._push(sig)
+        return sig
 
     def _push(self, signature: Signature):
         """
@@ -128,10 +128,11 @@ class CacheAgentTransactionMixIn(CacheAgentABCMixIn, BaseCacheAgentMixIn):
         pass
 
     def pull(self, func: Callable, *args, **kwargs):
-        sig = Signature(func, *args, **kwargs)
-        return self._pull(sig, Unknown)
+        sig     = Signature(func, *args, **kwargs)
+        default = Unknown
+        return self._pull(sig, default)
 
-    def _pull(self, signature: Signature, default=Unknown):
+    def _pull(self, signature: Union[bytes, str], default: Any):
         """
         Not implemeneted here.
         Pull an entry, if exists, from the
