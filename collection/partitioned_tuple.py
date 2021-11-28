@@ -1,6 +1,8 @@
 import math
 from typing import Iterable
 
+from clibs.bin._math._math import lib as _math_lib
+
 
 class PartitionedTuple(tuple):
     _partition_bias:     float
@@ -116,34 +118,17 @@ def _primes(*args):
     return _primes_raw(*args)
 
 
-def _get_next_prime(num: int):
-    if num in (1,2):
-        return num + 1
-    
-    num += 2
-    while not _is_prime(num):
-        num += 2
-    return num
+def _get_next_prime(num: int) -> int:
+    return _math_lib.CgetNextPrime(num)
 
 
-def _is_prime(num: int):
-    if (num <= 1): return False
-    if (num <= 3): return True
-    if (num % 2 == 0 or num % 3 == 0): return False
-
-    step = 5
-    while ((step ** 2) <= num):
-        if (num % step == 0 or num % (step + 2) == 0):
-            return False
-        step += 6
-
-    return True
-
+def _is_prime(num: int) -> bool:
+    return bool(_math_lib.CisPrime(num))
 
 
 def _test():
     for i in range(10000):
-        print([j for j in _prime_factors(i)])
+        print(i, [j for j in _prime_factors(i)])
         test = PartitionedTuple([j for j in range(i)])
 
 
