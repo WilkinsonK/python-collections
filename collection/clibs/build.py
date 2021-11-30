@@ -5,6 +5,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+# using cffi library to build extensions
+# https://cffi.readthedocs.io/en/latest/overview.html#main-mode-of-usage
 import cffi
 
 
@@ -19,6 +21,10 @@ TAG_START_BODY = re.compile(r"\/\/ START_BODY", flags=re.M)
 
 
 class _Singleton:
+    """
+    Defines a singleton object that is only
+    instantiated once.
+    """
     _inst = None
 
     def __new__(cls, *args, **kwargs):

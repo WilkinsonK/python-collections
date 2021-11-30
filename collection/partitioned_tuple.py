@@ -1,7 +1,7 @@
 import math
 from typing import Iterable
 
-from clibs.bin._math._math import lib as _math_lib
+from clibs import _cmath
 
 
 class PartitionedTuple(tuple):
@@ -68,32 +68,15 @@ class PartitionedTuple(tuple):
         return self._partition_capacity
 
 
-def _prime_factors(num: int):
-    while not (_is_prime(num) or (num <= 1)):
-        num, prime = _next_prime_factor(num)
-        yield prime
-    yield num
-
-
-def _next_prime_factor(num: int):
-    for _prime in _primes(num):
-        if num % _prime == 0:
-            prime = _prime
-            break
-
-    num = num // prime
-    return num, prime
-
-
 def _get_size_buffer(iterable: Iterable):
     size = len(iterable)
-    while _is_prime(size):
+    while _cmath.isprime(size):
         size += 1
     return size
 
 
 def _get_dimensions(size: int, bias: float):
-    factors = [f for f in _prime_factors(size)]
+    factors = [f for f in _cmath.prime_factors(size)]
     bias    = math.floor(len(factors) * bias)
     return [math.prod(i) for i in (factors[:bias], factors[bias:])]
 
@@ -106,31 +89,12 @@ def _partition_items(items: list, count: int, capacity: int):
     return new
 
 
-def _primes_raw(start: int, end: int):
-    while start < end:
-        yield start
-        start = _get_next_prime(start)
-
-
-def _primes(*args):
-    if len(args) == 1:
-        return _primes_raw(2, *args)
-    return _primes_raw(*args)
-
-
-def _get_next_prime(num: int) -> int:
-    return _math_lib.CgetNextPrime(num)
-
-
-def _is_prime(num: int) -> bool:
-    return bool(_math_lib.CisPrime(num))
-
-
 def _test():
     for i in range(10000):
-        print(i, [j for j in _prime_factors(i)])
+        print(i, [j for j in _cmath.prime_factors(i)])
         test = PartitionedTuple([j for j in range(i)])
 
 
 if __name__ == "__main__":
     _test()
+
