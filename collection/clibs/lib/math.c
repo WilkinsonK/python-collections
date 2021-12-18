@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 int Cmodulo(int n, int m)
 {
     return n % m;
@@ -40,20 +41,9 @@ int CgetNextPrime(int n)
     return n;
 }
 
-int * CextendArray(int * arr, int item) {
-    static int size = sizeof(arr);
-    static int * temp;
-    temp = malloc((size + 1) * sizeof(int));
-    printf("size of array: %d\n", size);
-
-    printf("\ncurrent primes:\n");
-    for (int i = 0; i < size; i++) {
-        temp[i] = arr[i];
-        printf("current prime: %d\n", temp[i]);
-    }
-    temp[size + 1] = item;
-    free(arr);
-    return temp;
+int Cfibonacci(int n) {
+    if (n < 2) { return 1; }
+    return Cfibonacci(n - 1) + Cfibonacci(n - 2);
 }
 
 // START_BODY
@@ -62,4 +52,4 @@ int Cpower(int n, int p);
 int Cmodulo(int n, int m);
 int CisPrime(int n);
 int CgetNextPrime(int n);
-// int Cfibonacci(int n);
+int Cfibonacci(int n);

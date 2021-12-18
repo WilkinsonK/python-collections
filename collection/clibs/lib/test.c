@@ -1,9 +1,19 @@
+#include <stdio.h>
+#include <stdlib.h>
 
-int Cfibonacci(int n) {
-    if (n < 2) { return 1; }
-    return Cfibonacci(n - 1) + Cfibonacci(n - 2);
+#define MAX_SLOTS 3000
+
+int          arr[MAX_SLOTS];
+unsigned int cursor_position = (MAX_SLOTS - 1);
+
+int main(int narg, char *argv[], char *penv[]) {
+    while (cursor_position) {
+        arr[cursor_position] = cursor_position;
+        cursor_position--;
+    }
+    while ((cursor_position) < MAX_SLOTS) {
+        printf("arr [%d]: %d\n", cursor_position, arr[cursor_position]);
+        cursor_position++;
+    }
+    return 0;
 }
-
-// START_BODY
-
-int Cfibonacci(int n);
