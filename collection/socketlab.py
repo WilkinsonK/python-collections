@@ -50,7 +50,7 @@ class SocketStatus(enum.IntEnum):
 
 
 class SocketOpenWarning(Warning):
-    """Warn if a socker is never closed."""
+    """Warn if a socket is never closed."""
 
 
 class SocketType(type):

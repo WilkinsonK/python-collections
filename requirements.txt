@@ -2,6 +2,7 @@ cffi
 click
 daemons
 psycopg2
+pydantic
 python-dotenv
 redis
 requests
