@@ -85,6 +85,9 @@ class RESTMethod(str, enum.Enum):
         return self.value
 
 
+Method = RESTMethod
+
+
 class AttributeField:
     annotation:      Any = NotSet
     apply_behavior:  ApplyBehavior
@@ -164,13 +167,13 @@ def optional(default: Any = None, **kwargs):
     return AttributeField(default, **kwargs)
 
 
-def optional_dict():
+def optional_dict(apply_behavior=ApplyBehavior.UPDATE):
     """
     Identify an optional dictionary field.
     """
     return optional(
         default_factory=dict,
-        apply_behavior=ApplyBehavior.UPDATE)
+        apply_behavior=apply_behavior)
 
 
 class APIClientABCMeta(abc.ABCMeta):
@@ -256,6 +259,7 @@ class BaseAPIClient(abc.ABC, metaclass=APIClientABCMeta):
     def _init(self, *args, **kwargs):
         self.__init__(*args, **kwargs)
         self._init_session()
+        self.healthcheck()
 
     def _init_session(self, **kwargs):
         parent = self._get_parent_class()
@@ -279,7 +283,7 @@ class BaseAPIClient(abc.ABC, metaclass=APIClientABCMeta):
     def healthcheck(self) -> int:
         """Send a health check ping to api reference."""
         uri = (self.healthcheck_uri or self.root_uri)
-        resp = self._send(RESTMethod.GET, "", root_url=uri)
+        resp = self._send(RESTMethod.GET, "", root_uri=uri)
         return resp.status_code
 
     def refresh(self, **kwargs) -> None:
@@ -287,24 +291,24 @@ class BaseAPIClient(abc.ABC, metaclass=APIClientABCMeta):
         self.__session__.close()
         self._init_session(**kwargs)
 
-    def send(self, method: RESTMethod, endpoint: str = None, data: dict = None, **kwargs) -> requests.Response:
+    def send(self, method: RESTMethod, endpoint: str = None, **kwargs) -> requests.Response:
         """Send a request using the API Client settings."""
         try:
-            resp = self._send(method, endpoint, data=data, **kwargs)
+            resp = self._send(method, endpoint, **kwargs)
             resp.raise_for_status()
         except requests.RequestException as error:
             self.handle_http_error(error, error.response)
         return resp
 
     def _send(self, method: RESTMethod, endpoint: str, **kwargs):
-        uri, timeout = _parse_send_kwargs(self, **kwargs)
+        uri, timeout = _parse_send_kwargs(self, kwargs)
         uri = "/".join([uri, endpoint or ""])
         return self.__session__.request(
             str(method),
             url=uri, timeout=timeout, **kwargs)
 
 
-def _parse_send_kwargs(client: BaseAPIClient, **kwargs):
+def _parse_send_kwargs(client: BaseAPIClient, kwargs: dict):
     parse = lambda n: kwargs.pop(n, getattr(client, n))
     return parse("root_uri"), parse("max_timeout")
 
@@ -341,5 +345,5 @@ if __name__ == "__main__":
 
 
     with GoogleAPI() as client:
-        resp = client.send(RESTMethod.GET)
+        resp = client.send(Method.GET)
         print(resp.headers)
