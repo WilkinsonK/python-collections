@@ -6,7 +6,7 @@ import abc
 import enum
 import os
 
-from typing import Any, Callable
+from typing import Any, Callable, Protocol
 
 import requests
 
@@ -41,7 +41,7 @@ class NotDefinedType(type):
 NotSet = NotDefinedType("NotSet", (), {})
 
 
-class Applier(Callable[[object, str, Any], None]):
+class Applier(Protocol):
     """
     Determines how a value is applied to
     a target object.
@@ -51,7 +51,7 @@ class Applier(Callable[[object, str, Any], None]):
         """Sets a value on a target object."""
 
 
-class ApplierMeta(enum.EnumMeta, abc.ABCMeta):
+class ApplierMeta(enum.EnumMeta, type(Applier)):
     """
     Meta type to resolve metaclass conflict
     between `Applier` and `enum.EnumMeta`
@@ -257,9 +257,8 @@ class BaseAPIClient(abc.ABC, metaclass=APIClientABCMeta):
         return cls
 
     def _init(self, *args, **kwargs):
-        self.__init__(*args, **kwargs)
         self._init_session()
-        self.healthcheck()
+        self.__init__(*args, **kwargs)
 
     def _init_session(self, **kwargs):
         parent = self._get_parent_class()
@@ -335,15 +334,3 @@ class ClientResponseError(ClientLibException):
 
     def __str__(self):
         return f"<[{self.status}]: {self.message} [elapsed: {self.elapsed}s]"
-
-
-if __name__ == "__main__":
-
-    class GoogleAPI(BaseAPIClient):
-        root_uri = "https://www.google.com"
-        max_timeout = (10.0, 40.0)
-
-
-    with GoogleAPI() as client:
-        resp = client.send(Method.GET)
-        print(resp.headers)
