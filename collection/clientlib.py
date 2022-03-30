@@ -11,19 +11,34 @@ from typing import Any, Callable, Protocol
 import requests
 
 
-def _is_annotated(obj: object, name: str):
-    return name in obj.__annotations__
+class ClientLibException(BaseException):
+    """Raise for errors concerning `clientlib.py`"""
+
+
+class ClientFieldError(ClientLibException):
+    """Raise for errors related to Client fields."""
+
+
+class ClientValidationError(ClientLibException):
+    """Raise for errors during Client validation."""
+
+
+class ClientResponseError(ClientLibException):
+    """Raise if response from sent request is bad."""
+
+    def __init__(self, message, status=500, elapsed=0.0):
+        self.elapsed = elapsed
+        self.message = message
+        self.status  = status
+
+    def __str__(self):
+        return f"<[{self.status}]: {self.message} [elapsed: {self.elapsed}s]"
 
 
 def _get_public_attrs(obj: object):
     return [(i, getattr(obj, i))
         for i in dir(obj) if "_" not in i[:2]
     ]
-
-
-def _ensure_annotated(obj: object, name: str):
-    if not _is_annotated(obj, name):
-        raise ClientFieldError(f"{name!r} was never annotated!")
 
 
 class NotDefinedType(type):
@@ -47,7 +62,8 @@ class Applier(Protocol):
     a target object.
     """
 
-    def __call__(self, obj: object, name: str, value: Any) -> None:
+    @staticmethod
+    def __call__(obj: object, name: str, value: Any) -> None:
         """Sets a value on a target object."""
 
 
@@ -138,10 +154,32 @@ def _attribute_as_value(field: AttributeField):
     return field.default
 
 
+def _ensure_annotated(obj: object, name: str):
+    if not _is_annotated(obj, name):
+        raise ClientFieldError(f"{name!r} was never annotated!")
+
+
+def _get_annotation(obj: object, name: str):
+    if not isinstance(obj, type):
+        obj = obj.__class__
+    _annotations_ = obj.__annotations__.copy()
+
+    for base in obj.__bases__:
+        _annotations_.update(base.__annotations__)
+    return _annotations_[name]
+
+
 def _has_default_option(field: AttributeField):
     return any([
         field.default is not NotSet,
         field.default_factory is not NotSet])
+
+
+def _is_annotated(obj: object, name: str):
+    if not isinstance(obj, type):
+        obj = obj.__class__
+    return any([
+        (name in b.__annotations__) for b in (obj,) + obj.__bases__])
 
 
 def _is_attribute(obj: object):
@@ -193,7 +231,7 @@ class APIClientABCMeta(abc.ABCMeta):
                 continue
             _ensure_annotated(cls, name)
 
-            field.annotation = cls.__annotations__[name]
+            field.annotation = _get_annotation(cls, name)
             if not _has_default_option(field):
                 _required_.update({name: field})
                 continue
@@ -272,12 +310,9 @@ class BaseAPIClient(abc.ABC, metaclass=APIClientABCMeta):
 
         self.__session__ = _session_
 
-    def handle_http_error(self, error: requests.HTTPError, resp: requests.Response = None) -> None:
+    def handle_http_error(self, error: requests.HTTPError) -> None:
         """Handle http protocol errors."""
-        args = (error,)
-        if resp is not None:
-            args = (*args, resp.status_code, resp.elapsed.total_seconds())
-        raise ClientResponseError(*args)
+        raise
 
     def healthcheck(self) -> int:
         """Send a health check ping to api reference."""
@@ -296,12 +331,13 @@ class BaseAPIClient(abc.ABC, metaclass=APIClientABCMeta):
             resp = self._send(method, endpoint, **kwargs)
             resp.raise_for_status()
         except requests.RequestException as error:
-            self.handle_http_error(error, error.response)
+            self.handle_http_error(error)
         return resp
 
     def _send(self, method: RESTMethod, endpoint: str, **kwargs):
         uri, timeout = _parse_send_kwargs(self, kwargs)
         uri = "/".join([uri, endpoint or ""])
+
         return self.__session__.request(
             str(method),
             url=uri, timeout=timeout, **kwargs)
@@ -310,27 +346,3 @@ class BaseAPIClient(abc.ABC, metaclass=APIClientABCMeta):
 def _parse_send_kwargs(client: BaseAPIClient, kwargs: dict):
     parse = lambda n: kwargs.pop(n, getattr(client, n))
     return parse("root_uri"), parse("max_timeout")
-
-
-class ClientLibException(BaseException):
-    """Raise for errors concerning `clientlib.py`"""
-
-
-class ClientFieldError(ClientLibException):
-    """Raise for errors related to Client fields."""
-
-
-class ClientValidationError(ClientLibException):
-    """Raise for errors during Client validation."""
-
-
-class ClientResponseError(ClientLibException):
-    """Raise if response from sent request is bad."""
-
-    def __init__(self, message, status=500, elapsed=0.0):
-        self.elapsed = elapsed
-        self.message = message
-        self.status  = status
-
-    def __str__(self):
-        return f"<[{self.status}]: {self.message} [elapsed: {self.elapsed}s]"
