@@ -9,7 +9,7 @@ import importlib
 import importlib.util
 
 from types import ModuleType
-from typing import Any, Protocol, TypeVar
+from typing import TypeVar
 
 from click import Command, Group
 
