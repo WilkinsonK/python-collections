@@ -65,8 +65,9 @@ def get_refpoint(line: str):
 
 def multiline_refpoint(lines: List[str]):
     """
-    Using `get_refpoint`, get the lowest reference
-    point that is not from any empty lines.
+    Using `get_refpoint`, get the shortest
+    reference point that is not from any
+    empty lines.
     """
 
     def is_empytline(line):

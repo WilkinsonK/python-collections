@@ -9,7 +9,7 @@ import importlib
 import importlib.util
 
 from types import ModuleType
-from typing import TypeVar
+from typing import Callable, TypeVar
 
 from click import Command, Group
 
@@ -47,8 +47,12 @@ class ModuleCommand:
 Namespace    = dict[str, ModuleCommand]
 RegistryDict = dict[str, Namespace]
 
-IT = TypeVar("IT")
-InstanceDict = dict[type[IT], IT]
+IT              = TypeVar("IT")
+InstanceDict    = dict[type[IT], IT]
+InstanceWrapper = Callable[[IT], IT]
+
+GroupWrapper    = InstanceWrapper[Group]
+ClickCmdWrapper = InstanceWrapper[ClickCmd]
 
 
 class ModuleNamespace(ModuleType):
@@ -134,7 +138,7 @@ def load_namespace(module: str, *,
     mdn = ModuleNamespace(mod.__name__, mod.__doc__)
 
     body = {} #type: ignore[var-annotated]
-    for base in (mod, mod):
+    for base in (mdn, mod):
         body |= base.__dict__
 
     mdn.__dict__.update(body)
